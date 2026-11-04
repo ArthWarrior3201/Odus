@@ -1,4 +1,4 @@
-<p align="center"><img src="logo.webp" alt="Odus logo" width="360"></p>
+<p align="center"><img src="odus_logo.png" alt="Odus logo" width="360"></p>
 
 # Odus
 

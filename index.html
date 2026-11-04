@@ -29,7 +29,9 @@
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     text-align: center;
   }
-  .logo { width: min(240px, 60vw); height: auto; display: block; }
+  /* show just the mark from odus_logo.png (it has wide black edges) */
+  .logo { width: min(240px, 60vw); aspect-ratio: 888 / 768; position: relative; overflow: hidden; }
+  .logo img { position: absolute; width: 172.973%; height: auto; max-width: none; left: -33.671%; top: -9.245%; }
   h1 { margin: 20px 0 32px; font-size: 3rem; line-height: 1; letter-spacing: .03em; }
   button { font: inherit; }
   button.download {
@@ -123,7 +125,7 @@
 </style>
 </head>
 <body>
-  <img class="logo" src="logo-mark.webp" alt="Odus logo" width="888" height="768">
+  <div class="logo"><img src="odus_logo.png" alt="Odus logo" width="1536" height="1024"></div>
   <h1>Odus</h1>
 
   <button class="download" id="download">Download</button>
