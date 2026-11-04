@@ -3,3 +3,8 @@ PATH-backup*.txt
 odus.ps1
 __pycache__/
 *.pyc
+
+# build output (uploaded to GitHub releases) and local launcher
+dist/
+/odus.cmd
+/odus.sh

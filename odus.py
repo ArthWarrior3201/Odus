@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Callable
 
-VERSION = "0.2.0"
+VERSION = "0.1"
 IS_WIN = os.name == "nt"
 IS_MAC = sys.platform == "darwin"
 OS_NAME = "windows" if IS_WIN else "macos" if IS_MAC else "linux"
@@ -813,7 +813,9 @@ def summary(req: Request, results: list) -> int:
 
 
 # ================================================================== extras
-HERE = os.path.dirname(os.path.abspath(__file__))
+SELF = os.path.realpath(__file__)  # odus.py, or the single-file odus.cmd / odus.sh
+HERE = os.path.dirname(SELF)
+SINGLE_FILE = SELF.lower().endswith((".cmd", ".sh"))
 CPUS = os.cpu_count() or 2
 CONFIG_DIR = (os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "Odus") if IS_WIN
               else os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "odus"))
@@ -1003,9 +1005,10 @@ def describe_diff(diff: dict) -> list:
 
 # ---------------------------------------------------------------- PATH setup
 PS1_MARK = "# Odus launcher for PowerShell"
+_PS1_TARGET = '-x "$PSScriptRoot\\odus.cmd"' if SELF.lower().endswith(".cmd") else '"$PSScriptRoot\\odus.py"'
 PS1 = PS1_MARK + r""" (written by Odus; turns on Live Refresh)
 $env:ODUS_REFRESH_FILE = Join-Path $env:TEMP ("odus-refresh-" + [guid]::NewGuid().ToString("N") + ".ps1")
-if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 "$PSScriptRoot\odus.py" @args } else { & python "$PSScriptRoot\odus.py" @args }
+if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 TARGET @args } else { & python TARGET @args }""".replace("TARGET", _PS1_TARGET) + r"""
 $odusRc = $LASTEXITCODE
 if (Test-Path -LiteralPath $env:ODUS_REFRESH_FILE) { . $env:ODUS_REFRESH_FILE; Remove-Item -LiteralPath $env:ODUS_REFRESH_FILE -Force }
 Remove-Item Env:ODUS_REFRESH_FILE -ErrorAction SilentlyContinue
@@ -1119,7 +1122,25 @@ def on_path() -> bool:
         parts = _win_user_path_raw()[0].split(";") + _win_read_env("machine").get("PATH", "").split(";")
         return any(_key(_expand(p)) == here for p in parts if p)
     link = os.path.expanduser("~/.local/bin/odus")
-    return os.path.islink(link) and _key(os.path.dirname(os.path.realpath(link))) == _key(os.path.realpath(HERE))
+    return os.path.islink(link) and _key(os.path.realpath(link)) == _key(SELF)
+
+
+# When run from the source (odus.py) on Windows, 'odus' needs a small odus.cmd next to it.
+SOURCE_CMD = """@echo off
+rem Odus launcher (written by Odus for running from source). No setlocal, so Live Refresh can update this window.
+set "ODUS_REFRESH_FILE=%TEMP%\\odus-refresh-%RANDOM%%RANDOM%.cmd"
+where py >nul 2>nul && goto :use_py
+python "%~dp0odus.py" %*
+goto :after
+:use_py
+py -3 "%~dp0odus.py" %*
+:after
+set "ODUS_RC=%errorlevel%"
+if exist "%ODUS_REFRESH_FILE%" call "%ODUS_REFRESH_FILE%"
+if exist "%ODUS_REFRESH_FILE%" del "%ODUS_REFRESH_FILE%" >nul 2>nul
+set "ODUS_REFRESH_FILE="
+set "ODUS_RC=" & exit /b %ODUS_RC%
+"""
 
 
 def path_add() -> bool:
@@ -1129,6 +1150,9 @@ def path_add() -> bool:
         return True
     try:
         if IS_WIN:
+            if not SINGLE_FILE and not os.path.exists(os.path.join(HERE, "odus.cmd")):
+                with open(os.path.join(HERE, "odus.cmd"), "w", encoding="ascii", newline="\r\n") as f:
+                    f.write(SOURCE_CMD)
             raw, _ = _win_user_path_raw()
             backup = _win_set_user_path((raw.rstrip(";") + ";" if raw else "") + HERE)
             os.environ["PATH"] = os.environ.get("PATH", "").rstrip(";") + ";" + HERE
@@ -1139,10 +1163,8 @@ def path_add() -> bool:
             return True
         bindir = os.path.expanduser("~/.local/bin")
         os.makedirs(bindir, exist_ok=True)
-        launcher = os.path.join(HERE, "odus.sh")
-        for f in (launcher, os.path.join(HERE, "odus.py")):
-            if os.path.exists(f):
-                os.chmod(f, os.stat(f).st_mode | 0o111)
+        launcher = SELF  # odus.sh, or odus.py (it has its own #! line)
+        os.chmod(launcher, os.stat(launcher).st_mode | 0o111)
         link = os.path.join(bindir, "odus")
         if os.path.lexists(link):
             os.remove(link)
@@ -1181,7 +1203,7 @@ def path_remove() -> bool:
 
 
 def launcher_hint() -> str:
-    return os.path.join(HERE, "odus.cmd") if IS_WIN else os.path.join(HERE, "odus.sh")
+    return quote_arg(SELF) if SINGLE_FILE else f"python {quote_arg(SELF)}"
 
 
 def first_run_check(verb: str):

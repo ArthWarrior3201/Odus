@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.webp" alt="Odus logo" width="360"></p>
+
 # Odus
 
 One command for every package manager, plus photo/video/app compression and
@@ -7,6 +9,19 @@ downloads. The same words work on Windows, macOS and Linux.
 odus [preset] [multi-package] <command> [what...] [options]
 ```
 
+## Download
+
+Get the latest version from the
+[releases page](https://github.com/ArthWarrior3201/Odus/releases/latest).
+It's a single file. You need Python 3.9 or newer.
+
+- **Windows:** download `odus.cmd`, then double-click it or run it in Command
+  Prompt.
+- **macOS / Linux:** download `odus.sh`, then run `chmod +x odus.sh` and
+  `./odus.sh`.
+
+You can also run the source directly: `python odus.py`.
+
 ## First run
 
 The first time you run Odus it asks whether to add itself to your PATH.
@@ -15,8 +30,8 @@ The first time you run Odus it asks whether to add itself to your PATH.
   in the registry (never `setx`, which cuts PATH off at 1024 characters) and a
   backup is saved first. On macOS/Linux Odus links `~/.local/bin/odus` and adds
   a small block to your shell settings.
-- **No:** nothing changes. Run it with `odus.cmd` (Windows) or `./odus.sh`
-  (macOS/Linux) from this folder.
+- **No:** nothing changes. Run the file you downloaded (`odus.cmd` or
+  `./odus.sh`) from its folder.
 
 Change your mind any time with `odus path add` or `odus path remove`.
 
@@ -136,10 +151,21 @@ Where it works:
 Typos and synonyms are understood: `odus fsat isntall git`,
 `odus ufa upgrade-applications`, `odus compres video.mp4`.
 
-## Install
+## Making a release
 
-Needs Python 3.9 or newer. Keep `odus.py`, `odus.cmd` and `odus.sh` together in
-one folder and run any command once: Odus asks about PATH by itself.
+1. Set `VERSION` in `odus.py`.
+2. Run `python build.py`. It writes `dist/odus.cmd` (Windows) and
+   `dist/odus.sh` (macOS/Linux). Each is the whole program in one file.
+3. On GitHub, create a release tagged `v<VERSION>` (for example `v0.1`) and
+   upload both files.
+
+## Download page
+
+`index.html` is a one-page site: the logo and a Download button. The button
+asks GitHub for the latest release and offers Windows (`.cmd`), macOS and
+Linux (`.sh`) downloads, highlighting the visitor's system. To put it online,
+open the repo's **Settings > Pages**, choose **Deploy from a branch**, then
+**main** and **/ (root)**.
 
 ## License
 

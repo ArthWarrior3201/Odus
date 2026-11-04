@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odus</title>
+<meta name="description" content="One command for every package manager - with speed presets.">
+<link rel="icon" href="logo.webp" type="image/webp">
+<style>
+  :root {
+    --bg: #000;
+    --text: #f5f1ea;
+    --muted: #a39d94;
+    --line: #2a2420;
+    --card: #0d0b0a;
+    --orange: #ff6a00;
+    --yellow: #ffc400;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    text-align: center;
+  }
+  .logo { width: min(420px, 90vw); height: auto; display: block; }
+  h1 { margin: -8px 0 4px; font-size: 2.6rem; letter-spacing: .02em; }
+  .tag { margin: 0 0 32px; color: var(--muted); max-width: 32rem; }
+  button.download {
+    font: inherit; font-weight: 700; font-size: 1.15rem;
+    color: #1a0d00;
+    background: linear-gradient(100deg, var(--orange), var(--yellow));
+    border: 0; border-radius: 999px;
+    padding: 14px 44px;
+    cursor: pointer;
+    box-shadow: 0 0 32px rgba(255, 106, 0, .35);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  button.download:hover { transform: translateY(-1px); box-shadow: 0 0 44px rgba(255, 140, 0, .5); }
+  button.download:focus-visible { outline: 3px solid var(--yellow); outline-offset: 4px; }
+  button.download[disabled] { opacity: .7; cursor: progress; }
+  .options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    width: min(560px, 100%);
+    margin-top: 28px;
+  }
+  .options a {
+    display: block;
+    padding: 16px 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .options a:hover, .options a:focus-visible { border-color: var(--orange); transform: translateY(-1px); outline: none; }
+  .options a.mine { border-color: var(--orange); box-shadow: 0 0 20px rgba(255, 106, 0, .25); }
+  .options strong { display: block; font-size: 1.05rem; }
+  .options span { color: var(--muted); font-size: .85rem; }
+  .status { margin-top: 20px; color: var(--muted); min-height: 1.5em; }
+  .status a, footer a { color: var(--yellow); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+  @media (max-width: 480px) {
+    .options { grid-template-columns: 1fr; }
+    h1 { font-size: 2.1rem; }
+  }
+</style>
+</head>
+<body>
+  <img class="logo" src="logo.webp" alt="Odus logo" width="1536" height="1024">
+  <h1>Odus</h1>
+  <p class="tag">One command for every package manager, with speed presets, compression and downloads built in.</p>
+
+  <button class="download" id="download">Download</button>
+  <div class="options" id="options" hidden></div>
+  <p class="status" id="status" aria-live="polite"></p>
+
+  <footer>Needs Python 3.9 or newer &middot; <a href="https://github.com/ArthWarrior3201/Odus">Source on GitHub</a></footer>
+
+<script>
+  const REPO = "ArthWarrior3201/Odus";
+  const button = document.getElementById("download");
+  const options = document.getElementById("options");
+  const status = document.getElementById("status");
+
+  function myOS() {
+    const p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent;
+    if (/win/i.test(p)) return "windows";
+    if (/mac|iphone|ipad/i.test(p)) return "macos";
+    if (/linux|x11|cros/i.test(p)) return "linux";
+    return "";
+  }
+
+  function card(id, name, asset, note) {
+    const a = document.createElement("a");
+    a.href = asset.browser_download_url;
+    a.download = asset.name;
+    if (id === myOS()) a.className = "mine";
+    a.innerHTML = "<strong></strong><span></span>";
+    a.querySelector("strong").textContent = name;
+    a.querySelector("span").textContent = note + " - " + asset.name;
+    return a;
+  }
+
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    status.textContent = "Checking for the latest release...";
+    try {
+      const res = await fetch("https://api.github.com/repos/" + REPO + "/releases/latest",
+                              { headers: { Accept: "application/vnd.github+json" } });
+      if (res.status === 404) throw new Error("none");
+      if (!res.ok) throw new Error("http " + res.status);
+      const release = await res.json();
+      const find = ext => (release.assets || []).find(a => a.name.toLowerCase().endsWith(ext));
+      const cmd = find(".cmd"), sh = find(".sh");
+      if (!cmd && !sh) throw new Error("none");
+
+      options.replaceChildren();
+      if (cmd) options.append(card("windows", "Windows", cmd, "Command Prompt"));
+      if (sh) {
+        options.append(card("macos", "macOS", sh, "Terminal"));
+        options.append(card("linux", "Linux", sh, "Terminal"));
+      }
+      options.hidden = false;
+      button.hidden = true;
+      status.textContent = "Odus " + (release.tag_name || release.name || "") + " - pick your system.";
+    } catch (err) {
+      button.disabled = false;
+      const link = '<a href="https://github.com/' + REPO + '/releases">GitHub releases</a>';
+      status.innerHTML = err.message === "none"
+        ? "No release yet. Check " + link + " soon."
+        : "Couldn't reach GitHub right now. Try again, or go to " + link + ".";
+    }
+  });
+</script>
+</body>
+</html>
