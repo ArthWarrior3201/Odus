@@ -2,9 +2,7 @@
 
 # Odus
 
-**Your whole computer, one command.** Install and update every app, shrink
-photos, videos and programs, and download from YouTube, GitHub or any link, as
-fast as you let it. The same words work on Windows, macOS and Linux.
+Odus works the same way on Windows, macOS and Linux.
 
 ```
 odus [preset] [multi-package] <command> [what...] [options]

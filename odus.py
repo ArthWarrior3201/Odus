@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Odus - your whole computer, one command: apps, compression and downloads.
+Odus
 
     odus update                  Standard: one thing at a time, default settings
     odus fast update             Fast: low CPU priority, a few parallel downloads
@@ -1988,7 +1988,7 @@ def do_download(req: Request) -> int:
 
 
 HELP = f"""
-{c('Odus v' + VERSION, '1')} - your whole computer, one command.
+{c('Odus v' + VERSION, '1')}
 
   odus [preset] [multi-package] <command> [what...] [options]
 
