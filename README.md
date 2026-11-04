@@ -140,3 +140,7 @@ Typos and synonyms are understood: `odus fsat isntall git`,
 
 Needs Python 3.9 or newer. Keep `odus.py`, `odus.cmd` and `odus.sh` together in
 one folder and run any command once: Odus asks about PATH by itself.
+
+## License
+
+MIT - see [LICENSE](LICENSE).
