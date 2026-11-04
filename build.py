@@ -66,7 +66,7 @@ def main():
     with open(os.path.join(DIST, "odus.py"), "w", encoding="utf-8", newline="\n") as f:
         f.write(src)
 
-    print(f"Built Odus {version}:")
+    print(f"Built Odus v{version}:")
     for name in ("odus.cmd", "odus.sh", "odus.py"):
         print(f"  dist/{name}  ({os.path.getsize(os.path.join(DIST, name)) // 1024} KB)")
     print(f"Upload all three to a GitHub release tagged v{version}.")

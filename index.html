@@ -172,9 +172,11 @@
     return res.json();
   }
 
-  // The release's name ("Odus 0.1"), or its tag ("v0.1") when it has no name
+  // Always "Odus v0.1", "Odus v0.2"... built from the release's tag
   function label(el, release) {
-    el.textContent = (release.name || "").trim() || release.tag_name || "";
+    const tag = (release.tag_name || "").trim().replace(/^odus[\s-]*/i, "");
+    el.textContent = tag ? "Odus " + (/^v/i.test(tag) ? "v" + tag.slice(1) : "v" + tag)
+                         : (release.name || "").trim();
   }
 
   function card(id, name, asset, note) {

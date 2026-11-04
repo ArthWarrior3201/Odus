@@ -775,7 +775,7 @@ def do_query(req: Request, field_name: str) -> int:
 
 
 def do_managers(req: Request) -> int:
-    say(f"Odus {VERSION} on {OS_NAME}  (admin: {'yes' if is_admin() else 'no'})\n")
+    say(f"Odus v{VERSION} on {OS_NAME}  (admin: {'yes' if is_admin() else 'no'})\n")
     for m in MANAGERS:
         if OS_NAME not in m.systems:
             continue
@@ -1988,7 +1988,7 @@ def do_download(req: Request) -> int:
 
 
 HELP = f"""
-{c('Odus', '1')} {VERSION} - your whole computer, one command.
+{c('Odus v' + VERSION, '1')} - your whole computer, one command.
 
   odus [preset] [multi-package] <command> [what...] [options]
 
@@ -2062,7 +2062,7 @@ def _main(req: Request) -> int:
         say(HELP)
         return 0
     if req.verb == "version":
-        say(f"odus {VERSION}")
+        say(f"Odus v{VERSION}")
         return 0
     if req.verb == "unknown":
         say(c(f"Odus doesn't understand '{' '.join(req.args)}'.", "31") + " Try " + c("odus help", "1"))
