@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Odus</title>
-<meta name="description" content="Your whole computer, one command. Install and update every app, shrink photos, videos and programs, and download from YouTube, GitHub or any link.">
+<meta name="description" content="Download Odus for Windows, macOS and Linux.">
 <link rel="icon" href="favicon.png" type="image/png" sizes="256x256">
 <link rel="apple-touch-icon" href="favicon.png">
 <style>
@@ -29,10 +29,8 @@
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     text-align: center;
   }
-  .logo { width: min(420px, 90vw); height: auto; display: block; }
-  h1 { margin: -8px 0 4px; font-size: 2.6rem; letter-spacing: .02em; }
-  .tag { margin: 0 0 32px; color: var(--muted); max-width: 34rem; }
-  .tag strong { display: block; color: var(--text); font-size: 1.15rem; margin-bottom: 4px; }
+  .logo { width: min(240px, 60vw); height: auto; display: block; }
+  h1 { margin: 20px 0 32px; font-size: 3rem; line-height: 1; letter-spacing: .03em; }
   button { font: inherit; }
   button.download {
     font-weight: 700; font-size: 1.15rem;
@@ -118,16 +116,15 @@
   footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
   @media (max-width: 480px) {
     .options { grid-template-columns: 1fr; }
-    h1 { font-size: 2.1rem; }
+    h1 { font-size: 2.4rem; margin: 16px 0 28px; }
     .info .row { flex-direction: column; gap: 2px; }
     .info .value { text-align: left; }
   }
 </style>
 </head>
 <body>
-  <img class="logo" src="logo.webp" alt="Odus logo" width="1536" height="1024">
+  <img class="logo" src="logo-mark.webp" alt="Odus logo" width="888" height="768">
   <h1>Odus</h1>
-  <p class="tag"><strong>Your whole computer, one command.</strong> Install and update every app, shrink photos, videos and programs, and download from YouTube, GitHub or any link, as fast as you let it.</p>
 
   <button class="download" id="download">Download</button>
 
