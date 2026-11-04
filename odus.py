@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Odus - one command for every package manager, with speed presets.
+Odus - your whole computer, one command: apps, compression and downloads.
 
     odus update                  Standard: one thing at a time, default settings
     odus fast update             Fast: low CPU priority, a few parallel downloads
@@ -1988,7 +1988,7 @@ def do_download(req: Request) -> int:
 
 
 HELP = f"""
-{c('Odus', '1')} {VERSION} - one command for every package manager, and more.
+{c('Odus', '1')} {VERSION} - your whole computer, one command.
 
   odus [preset] [multi-package] <command> [what...] [options]
 

@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Odus</title>
-<meta name="description" content="One command for every package manager - with speed presets.">
-<link rel="icon" href="logo.webp" type="image/webp">
+<meta name="description" content="Your whole computer, one command. Install and update every app, shrink photos, videos and programs, and download from YouTube, GitHub or any link.">
+<link rel="icon" href="favicon.png" type="image/png" sizes="256x256">
+<link rel="apple-touch-icon" href="favicon.png">
 <style>
   :root {
     --bg: #000;
@@ -30,7 +31,8 @@
   }
   .logo { width: min(420px, 90vw); height: auto; display: block; }
   h1 { margin: -8px 0 4px; font-size: 2.6rem; letter-spacing: .02em; }
-  .tag { margin: 0 0 32px; color: var(--muted); max-width: 32rem; }
+  .tag { margin: 0 0 32px; color: var(--muted); max-width: 34rem; }
+  .tag strong { display: block; color: var(--text); font-size: 1.15rem; margin-bottom: 4px; }
   button { font: inherit; }
   button.download {
     font-weight: 700; font-size: 1.15rem;
@@ -125,7 +127,7 @@
 <body>
   <img class="logo" src="logo.webp" alt="Odus logo" width="1536" height="1024">
   <h1>Odus</h1>
-  <p class="tag">One command for every package manager, with speed presets, compression and downloads built in.</p>
+  <p class="tag"><strong>Your whole computer, one command.</strong> Install and update every app, shrink photos, videos and programs, and download from YouTube, GitHub or any link, as fast as you let it.</p>
 
   <button class="download" id="download">Download</button>
 
@@ -170,16 +172,9 @@
     return res.json();
   }
 
-  // "Odus 0.1" (v0.1), or just the tag when the release has no separate name
+  // The release's name ("Odus 0.1"), or its tag ("v0.1") when it has no name
   function label(el, release) {
-    const tag = release.tag_name || "";
-    const name = (release.name || "").trim() || tag;
-    el.textContent = name;
-    if (tag && tag !== name) {
-      const small = document.createElement("small");
-      small.textContent = tag;
-      el.append(small);
-    }
+    el.textContent = (release.name || "").trim() || release.tag_name || "";
   }
 
   function card(id, name, asset, note) {
@@ -204,7 +199,7 @@
       options.append(card("linux", "Linux", sh, "Terminal"));
     }
     if (py) {
-      const src = card("source", "Python source", py, "Any system: python " + py.name);
+      const src = card("source", "Python source", py, "Any system");
       src.classList.add("source");
       options.append(src);
     }
