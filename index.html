@@ -64,7 +64,10 @@
   }
   .options a:hover { border-color: var(--orange); transform: translateY(-1px); }
   .options a.mine { border-color: var(--orange); box-shadow: 0 0 20px rgba(255, 106, 0, .25); }
-  .options .none { grid-column: 1 / -1; color: var(--muted); }
+  .options .none, .options a.source { grid-column: 1 / -1; }
+  .options .none { color: var(--muted); }
+  .options a.source { padding: 12px; }
+  .options a.source strong { display: inline; margin-right: 8px; }
   .options strong { display: block; font-size: 1.05rem; }
   .options span { color: var(--muted); font-size: .85rem; }
 
@@ -193,14 +196,19 @@
   // Fill the three download cards for one release
   function show(release) {
     const find = ext => (release.assets || []).find(a => a.name.toLowerCase().endsWith(ext));
-    const cmd = find(".cmd"), sh = find(".sh");
+    const cmd = find(".cmd"), sh = find(".sh"), py = find(".py");
     options.replaceChildren();
     if (cmd) options.append(card("windows", "Windows", cmd, "Command Prompt"));
     if (sh) {
       options.append(card("macos", "macOS", sh, "Terminal"));
       options.append(card("linux", "Linux", sh, "Terminal"));
     }
-    if (!cmd && !sh) {
+    if (py) {
+      const src = card("source", "Python source", py, "Any system: python " + py.name);
+      src.classList.add("source");
+      options.append(src);
+    }
+    if (!cmd && !sh && !py) {
       const none = document.createElement("div");
       none.className = "none";
       none.textContent = "This release has no downloads for Windows, macOS or Linux.";

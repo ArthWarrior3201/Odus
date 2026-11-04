@@ -19,8 +19,7 @@ It's a single file. You need Python 3.9 or newer.
   Prompt.
 - **macOS / Linux:** download `odus.sh`, then run `chmod +x odus.sh` and
   `./odus.sh`.
-
-You can also run the source directly: `python odus.py`.
+- **Any system:** download `odus.py` and run `python odus.py`.
 
 ## First run
 
@@ -154,16 +153,19 @@ Typos and synonyms are understood: `odus fsat isntall git`,
 ## Making a release
 
 1. Set `VERSION` in `odus.py`.
-2. Run `python build.py`. It writes `dist/odus.cmd` (Windows) and
-   `dist/odus.sh` (macOS/Linux). Each is the whole program in one file.
+2. Run `python build.py`. It writes `dist/odus.cmd` (Windows),
+   `dist/odus.sh` (macOS/Linux) and `dist/odus.py` (plain source). Each is
+   the whole program in one file.
 3. On GitHub, create a release tagged `v<VERSION>` (for example `v0.1`) and
-   upload both files.
+   upload all three files.
 
 ## Download page
 
 `index.html` is a one-page site: the logo and a Download button. The button
 asks GitHub for the latest release and offers Windows (`.cmd`), macOS and
-Linux (`.sh`) downloads, highlighting the visitor's system. To put it online,
+Linux (`.sh`) and Python source (`.py`) downloads, highlighting the visitor's
+system. See More Releases lists every release so older versions can be
+downloaded the same way. To put it online,
 open the repo's **Settings > Pages**, choose **Deploy from a branch**, then
 **main** and **/ (root)**.
 

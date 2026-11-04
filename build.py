@@ -4,9 +4,10 @@ Builds the single-file downloads for a GitHub release from odus.py:
 
     dist/odus.cmd   Windows        (batch launcher + Python in one file)
     dist/odus.sh    macOS / Linux  (sh launcher + Python in one file)
+    dist/odus.py    any system     (plain source: python odus.py)
 
 Each file is the whole program, so people only download one file.
-Run:  python build.py   then upload both files from dist/ to the release.
+Run:  python build.py   then upload all three files from dist/ to the release.
 """
 import os
 import re
@@ -61,10 +62,14 @@ def main():
         f.write(sh)
     os.chmod(path, 0o755)
 
+    # the plain Python source, for people who'd rather run: python odus.py
+    with open(os.path.join(DIST, "odus.py"), "w", encoding="utf-8", newline="\n") as f:
+        f.write(src)
+
     print(f"Built Odus {version}:")
-    for name in ("odus.cmd", "odus.sh"):
+    for name in ("odus.cmd", "odus.sh", "odus.py"):
         print(f"  dist/{name}  ({os.path.getsize(os.path.join(DIST, name)) // 1024} KB)")
-    print(f"Upload both to a GitHub release tagged v{version}.")
+    print(f"Upload all three to a GitHub release tagged v{version}.")
 
 
 if __name__ == "__main__":
