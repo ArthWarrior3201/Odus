@@ -31,8 +31,9 @@
   .logo { width: min(420px, 90vw); height: auto; display: block; }
   h1 { margin: -8px 0 4px; font-size: 2.6rem; letter-spacing: .02em; }
   .tag { margin: 0 0 32px; color: var(--muted); max-width: 32rem; }
+  button { font: inherit; }
   button.download {
-    font: inherit; font-weight: 700; font-size: 1.15rem;
+    font-weight: 700; font-size: 1.15rem;
     color: #1a0d00;
     background: linear-gradient(100deg, var(--orange), var(--yellow));
     border: 0; border-radius: 999px;
@@ -42,16 +43,16 @@
     transition: transform .15s ease, box-shadow .15s ease;
   }
   button.download:hover { transform: translateY(-1px); box-shadow: 0 0 44px rgba(255, 140, 0, .5); }
-  button.download:focus-visible { outline: 3px solid var(--yellow); outline-offset: 4px; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
   button.download[disabled] { opacity: .7; cursor: progress; }
+
+  .panel { width: min(560px, 100%); }
   .options {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
-    width: min(560px, 100%);
-    margin-top: 28px;
   }
-  .options a {
+  .options a, .options .none {
     display: block;
     padding: 16px 12px;
     border: 1px solid var(--line);
@@ -61,16 +62,60 @@
     text-decoration: none;
     transition: border-color .15s ease, transform .15s ease;
   }
-  .options a:hover, .options a:focus-visible { border-color: var(--orange); transform: translateY(-1px); outline: none; }
+  .options a:hover { border-color: var(--orange); transform: translateY(-1px); }
   .options a.mine { border-color: var(--orange); box-shadow: 0 0 20px rgba(255, 106, 0, .25); }
+  .options .none { grid-column: 1 / -1; color: var(--muted); }
   .options strong { display: block; font-size: 1.05rem; }
   .options span { color: var(--muted); font-size: .85rem; }
+
+  .info {
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    text-align: left;
+  }
+  .info .row {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 16px;
+  }
+  .info .row + .row { border-top: 1px solid var(--line); }
+  .info .label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .info .value { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .info .value small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .info .row.current .value { color: var(--yellow); }
+
+  .link-btn {
+    margin-top: 14px;
+    background: none; border: 0; padding: 6px 4px;
+    color: var(--yellow); cursor: pointer; font-weight: 600;
+  }
+  .link-btn:hover { text-decoration: underline; }
+
+  .releases { margin-top: 12px; text-align: left; }
+  .releases h2 { font-size: 1rem; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-align: center; }
+  .releases ul { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto;
+                 border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  .releases li + li { border-top: 1px solid var(--line); }
+  .releases button.item {
+    width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: none; border: 0; padding: 12px 16px; color: var(--text); cursor: pointer; text-align: left;
+  }
+  .releases button.item:hover { background: #17120f; }
+  .releases button.item[aria-current="true"] { color: var(--yellow); }
+  .releases .meta { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+  .badge { font-size: .7rem; padding: 1px 7px; border-radius: 999px; margin-left: 6px;
+           border: 1px solid var(--line); color: var(--muted); vertical-align: middle; }
+  .badge.latest { border-color: var(--orange); color: var(--orange); }
+
   .status { margin-top: 20px; color: var(--muted); min-height: 1.5em; }
   .status a, footer a { color: var(--yellow); }
   footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
   @media (max-width: 480px) {
     .options { grid-template-columns: 1fr; }
     h1 { font-size: 2.1rem; }
+    .info .row { flex-direction: column; gap: 2px; }
+    .info .value { text-align: left; }
   }
 </style>
 </head>
@@ -80,16 +125,32 @@
   <p class="tag">One command for every package manager, with speed presets, compression and downloads built in.</p>
 
   <button class="download" id="download">Download</button>
-  <div class="options" id="options" hidden></div>
+
+  <div class="panel" id="panel" hidden>
+    <div class="options" id="options"></div>
+    <div class="info">
+      <div class="row"><span class="label">Latest release</span><span class="value" id="latest"></span></div>
+      <div class="row current"><span class="label">You're downloading</span><span class="value" id="current"></span></div>
+    </div>
+    <button class="link-btn" id="more" aria-expanded="false">See More Releases &rarr;</button>
+    <div class="releases" id="releases" hidden>
+      <h2>All Odus releases</h2>
+      <ul id="release-list"></ul>
+    </div>
+  </div>
+
   <p class="status" id="status" aria-live="polite"></p>
 
   <footer>Needs Python 3.9 or newer &middot; <a href="https://github.com/ArthWarrior3201/Odus">Source on GitHub</a></footer>
 
 <script>
   const REPO = "ArthWarrior3201/Odus";
-  const button = document.getElementById("download");
-  const options = document.getElementById("options");
-  const status = document.getElementById("status");
+  const API = "https://api.github.com/repos/" + REPO;
+  const $ = id => document.getElementById(id);
+  const button = $("download"), panel = $("panel"), options = $("options"), status = $("status");
+  const more = $("more"), releasesBox = $("releases"), list = $("release-list");
+  const linkToReleases = '<a href="https://github.com/' + REPO + '/releases">GitHub releases</a>';
+  let latest = null, current = null, allReleases = null;
 
   function myOS() {
     const p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent;
@@ -97,6 +158,25 @@
     if (/mac|iphone|ipad/i.test(p)) return "macos";
     if (/linux|x11|cros/i.test(p)) return "linux";
     return "";
+  }
+
+  async function getJSON(url) {
+    const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+    if (res.status === 404) throw new Error("none");
+    if (!res.ok) throw new Error("http " + res.status);
+    return res.json();
+  }
+
+  // "Odus 0.1" (v0.1), or just the tag when the release has no separate name
+  function label(el, release) {
+    const tag = release.tag_name || "";
+    const name = (release.name || "").trim() || tag;
+    el.textContent = name;
+    if (tag && tag !== name) {
+      const small = document.createElement("small");
+      small.textContent = tag;
+      el.append(small);
+    }
   }
 
   function card(id, name, asset, note) {
@@ -110,34 +190,109 @@
     return a;
   }
 
+  // Fill the three download cards for one release
+  function show(release) {
+    const find = ext => (release.assets || []).find(a => a.name.toLowerCase().endsWith(ext));
+    const cmd = find(".cmd"), sh = find(".sh");
+    options.replaceChildren();
+    if (cmd) options.append(card("windows", "Windows", cmd, "Command Prompt"));
+    if (sh) {
+      options.append(card("macos", "macOS", sh, "Terminal"));
+      options.append(card("linux", "Linux", sh, "Terminal"));
+    }
+    if (!cmd && !sh) {
+      const none = document.createElement("div");
+      none.className = "none";
+      none.textContent = "This release has no downloads for Windows, macOS or Linux.";
+      options.append(none);
+    }
+    if (latest) label($("latest"), latest); else $("latest").textContent = "none yet";
+    current = release;
+    label($("current"), release);
+    markCurrent();
+  }
+
+  function markCurrent() {
+    for (const b of list.querySelectorAll("button.item")) {
+      b.setAttribute("aria-current", String(current && b.dataset.id === String(current.id)));
+    }
+  }
+
   button.addEventListener("click", async () => {
     button.disabled = true;
     status.textContent = "Checking for the latest release...";
     try {
-      const res = await fetch("https://api.github.com/repos/" + REPO + "/releases/latest",
-                              { headers: { Accept: "application/vnd.github+json" } });
-      if (res.status === 404) throw new Error("none");
-      if (!res.ok) throw new Error("http " + res.status);
-      const release = await res.json();
-      const find = ext => (release.assets || []).find(a => a.name.toLowerCase().endsWith(ext));
-      const cmd = find(".cmd"), sh = find(".sh");
-      if (!cmd && !sh) throw new Error("none");
-
-      options.replaceChildren();
-      if (cmd) options.append(card("windows", "Windows", cmd, "Command Prompt"));
-      if (sh) {
-        options.append(card("macos", "macOS", sh, "Terminal"));
-        options.append(card("linux", "Linux", sh, "Terminal"));
-      }
-      options.hidden = false;
+      latest = await getJSON(API + "/releases/latest");
+      show(latest);
+      panel.hidden = false;
       button.hidden = true;
-      status.textContent = "Odus " + (release.tag_name || release.name || "") + " - pick your system.";
+      status.textContent = "";
     } catch (err) {
       button.disabled = false;
-      const link = '<a href="https://github.com/' + REPO + '/releases">GitHub releases</a>';
       status.innerHTML = err.message === "none"
-        ? "No release yet. Check " + link + " soon."
-        : "Couldn't reach GitHub right now. Try again, or go to " + link + ".";
+        ? "No release yet. Check " + linkToReleases + " soon."
+        : "Couldn't reach GitHub right now. Try again, or go to " + linkToReleases + ".";
+    }
+  });
+
+  async function loadAllReleases() {
+    const out = [];
+    for (let page = 1; page <= 10; page++) {
+      const batch = await getJSON(API + "/releases?per_page=100&page=" + page);
+      out.push(...batch.filter(r => !r.draft));
+      if (batch.length < 100) break;
+    }
+    return out;
+  }
+
+  function fillList() {
+    list.replaceChildren();
+    for (const r of allReleases) {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.className = "item";
+      b.dataset.id = r.id;
+      const left = document.createElement("span");
+      label(left, r);
+      if (latest && r.id === latest.id) left.insertAdjacentHTML("beforeend", '<span class="badge latest">latest</span>');
+      if (r.prerelease) left.insertAdjacentHTML("beforeend", '<span class="badge">pre-release</span>');
+      const meta = document.createElement("span");
+      meta.className = "meta";
+      const when = r.published_at ? new Date(r.published_at).toLocaleDateString() : "";
+      meta.textContent = when + " →";
+      b.append(left, meta);
+      b.addEventListener("click", () => {
+        show(r);
+        releasesBox.hidden = true;
+        more.setAttribute("aria-expanded", "false");
+        more.innerHTML = "See More Releases &rarr;";
+        options.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      li.append(b);
+      list.append(li);
+    }
+  }
+
+  more.addEventListener("click", async () => {
+    if (!releasesBox.hidden) {
+      releasesBox.hidden = true;
+      more.setAttribute("aria-expanded", "false");
+      more.innerHTML = "See More Releases &rarr;";
+      return;
+    }
+    try {
+      if (!allReleases) {
+        more.textContent = "Loading releases...";
+        allReleases = await loadAllReleases();
+        fillList();
+      }
+      releasesBox.hidden = false;
+      more.setAttribute("aria-expanded", "true");
+      more.innerHTML = "Hide releases &larr;";
+      markCurrent();
+    } catch (err) {
+      more.innerHTML = "See More Releases &rarr;";
+      status.innerHTML = "Couldn't load the list. See all releases on " + linkToReleases + ".";
     }
   });
 </script>
