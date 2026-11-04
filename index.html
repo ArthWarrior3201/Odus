@@ -15,6 +15,7 @@
     --card: #0d0b0a;
     --orange: #ff6a00;
     --yellow: #ffc400;
+    --gold: #f5c542;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -108,7 +109,7 @@
   .releases .meta { color: var(--muted); font-size: .8rem; white-space: nowrap; }
   .badge { font-size: .7rem; padding: 1px 7px; border-radius: 999px; margin-left: 6px;
            border: 1px solid var(--line); color: var(--muted); vertical-align: middle; }
-  .badge.latest { border-color: var(--orange); color: var(--orange); }
+  .badge.latest { border-color: var(--gold); color: var(--gold); }
 
   .status { margin-top: 20px; color: var(--muted); min-height: 1.5em; }
   .status a, footer a { color: var(--yellow); }
@@ -255,7 +256,7 @@
       b.dataset.id = r.id;
       const left = document.createElement("span");
       label(left, r);
-      if (latest && r.id === latest.id) left.insertAdjacentHTML("beforeend", '<span class="badge latest">latest</span>');
+      if (latest && r.id === latest.id) left.insertAdjacentHTML("beforeend", '<span class="badge latest">Latest</span>');
       if (r.prerelease) left.insertAdjacentHTML("beforeend", '<span class="badge">pre-release</span>');
       const meta = document.createElement("span");
       meta.className = "meta";
