@@ -1,0 +1,5 @@
+# personal, made by Odus on each machine
+PATH-backup*.txt
+odus.ps1
+__pycache__/
+*.pyc
