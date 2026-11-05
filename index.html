@@ -113,6 +113,31 @@
            border: 1px solid var(--line); color: var(--muted); vertical-align: middle; }
   .badge.latest { border-color: var(--gold); color: var(--gold); }
 
+  .thanks { width: min(560px, 100%); text-align: left; }
+  .thanks h2 { margin: 0 0 4px; font-size: 1.5rem; text-align: center; }
+  .thanks .sub { margin: 0 0 20px; color: var(--muted); text-align: center; }
+  .thanks ol { margin: 0; padding: 0; list-style: none; counter-reset: step;
+               border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  .thanks li { counter-increment: step; padding: 12px 16px 12px 48px; position: relative; }
+  .thanks li + li { border-top: 1px solid var(--line); }
+  .thanks li::before { content: counter(step); position: absolute; left: 16px; top: 12px;
+                       width: 22px; height: 22px; border-radius: 50%; background: var(--orange); color: #1a0d00;
+                       font-size: .8rem; font-weight: 700; display: grid; place-items: center; }
+  .code { display: flex; align-items: center; gap: 8px; margin-top: 8px;
+          background: #000; border: 1px solid var(--line); border-radius: 10px; padding: 8px 8px 8px 12px; }
+  .code code { flex: 1; font: .9rem/1.4 ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+               color: var(--yellow); overflow-x: auto; white-space: nowrap; }
+  .code button { background: #17120f; color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+                 padding: 4px 10px; cursor: pointer; font-size: .8rem; white-space: nowrap; }
+  .code button:hover { border-color: var(--orange); }
+  .note { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--gold); border-radius: 14px;
+          background: rgba(245, 197, 66, .07); }
+  .note strong { color: var(--gold); }
+  .note p { margin: 0 0 4px; }
+  .thanks .again { margin: 16px 0 0; text-align: center; color: var(--muted); font-size: .9rem; }
+  .thanks .again a { color: var(--yellow); }
+  .thanks .again .link-btn { margin-top: 0; }
+
   .status { margin-top: 20px; color: var(--muted); min-height: 1.5em; }
   .status a, footer a { color: var(--yellow); }
   footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
@@ -142,6 +167,17 @@
       <ul id="release-list"></ul>
     </div>
   </div>
+
+  <section class="thanks" id="thanks" hidden aria-live="polite">
+    <h2>Thank you for downloading Odus!</h2>
+    <p class="sub" id="thanks-sub"></p>
+    <ol id="thanks-steps"></ol>
+    <div class="note" id="thanks-note" hidden></div>
+    <p class="again">
+      Download didn't start? <a id="thanks-retry" href="#">Try again</a> &middot;
+      <button class="link-btn" id="thanks-back">&larr; Back to downloads</button>
+    </p>
+  </section>
 
   <p class="status" id="status" aria-live="polite"></p>
 
@@ -186,8 +222,79 @@
     a.innerHTML = "<strong></strong><span></span>";
     a.querySelector("strong").textContent = name;
     a.querySelector("span").textContent = note + " - " + asset.name;
+    // the download starts as normal; the page switches to the thank-you screen
+    a.addEventListener("click", () => thanks(id, name, asset));
     return a;
   }
+
+  // ------------------------------------------------------- thank-you page
+  // Every system gets the same two general steps. Only macOS adds the note
+  // about getting past Apple's security check on macOS Tahoe 26 and newer.
+  const thanksBox = $("thanks");
+
+  function codeLine(cmd) {
+    const box = document.createElement("div");
+    box.className = "code";
+    const code = document.createElement("code");
+    code.textContent = cmd;
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Copy";
+    copy.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(cmd); copy.textContent = "Copied"; }
+      catch { copy.textContent = "Select & copy"; }
+      setTimeout(() => { copy.textContent = "Copy"; }, 1500);
+    });
+    box.append(code, copy);
+    return box;
+  }
+
+  function step(text, cmd) {
+    const li = document.createElement("li");
+    li.append(document.createTextNode(text));
+    if (cmd) li.append(codeLine(cmd));
+    return li;
+  }
+
+  function thanks(id, name, asset) {
+    const file = asset.name;
+    const run = {
+      windows: ["Open it: double-click " + file + ", or run it in Command Prompt:", file],
+      macos:   ["Open it: in Terminal, go to where you saved it and run:", "chmod +x " + file + " && ./" + file],
+      linux:   ["Open it: in a terminal, go to where you saved it and run:", "chmod +x " + file + " && ./" + file],
+      source:  ["Open it: in a terminal, go to where you saved it and run:", "python " + file],
+    }[id];
+    const first = id === "source"
+      ? "The first time, Odus asks whether to add itself to your PATH. Needs Python 3.9 or newer."
+      : "The first time, Odus asks whether to add itself to your PATH. No Python? It offers to download a private copy just for Odus.";
+
+    label($("thanks-sub"), current);
+    $("thanks-sub").textContent += " for " + name + " · " + file;
+    $("thanks-steps").replaceChildren(step(run[0], run[1]), step(first));
+
+    const note = $("thanks-note");
+    note.replaceChildren();
+    note.hidden = id !== "macos";
+    if (id === "macos") {
+      const p1 = document.createElement("p");
+      p1.innerHTML = "<strong>Using macOS Tahoe 26 (Developer Beta) or newer?</strong>";
+      const p2 = document.createElement("p");
+      p2.textContent = "The older way, right-click > Open and then Open Anyway, won't work there. " +
+                       "Instead, remove the com.apple.quarantine flag macOS puts on downloaded files, " +
+                       "then open " + file + " as usual. In Terminal, in the folder you saved it to, run:";
+      note.append(p1, p2, codeLine("xattr -d com.apple.quarantine " + file));
+    }
+
+    $("thanks-retry").href = asset.browser_download_url;
+    panel.hidden = true;
+    thanksBox.hidden = false;
+    thanksBox.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  $("thanks-back").addEventListener("click", () => {
+    thanksBox.hidden = true;
+    panel.hidden = false;
+  });
 
   // Fill the download cards for one release. Newer releases ship odus.bat /
   // odus.command / odus.sh; older ones had odus.cmd and odus.sh only.

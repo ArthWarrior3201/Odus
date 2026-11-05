@@ -20,6 +20,9 @@ It's a single file, and you don't need to install Python.
 - **macOS:** download `odus.command`, then run `chmod +x odus.command` once in
   Terminal. After that, double-click it, or run `./odus.command`. If macOS
   says it can't check the developer, right-click it and choose **Open**.
+  On **macOS Tahoe 26 (Developer Beta) or newer** that no longer works (nor does
+  **Open Anyway**); remove the quarantine flag instead, then open it as usual:
+  `xattr -d com.apple.quarantine odus.command`
 - **Linux:** download `odus.sh`, then run `chmod +x odus.sh` and `./odus.sh`.
 - **Any system with Python 3.9+:** download `odus.py` and run `python odus.py`.
 
