@@ -12,13 +12,28 @@ odus [preset] [multi-package] <command> [what...] [options]
 
 Get the latest version from the
 [releases page](https://github.com/ArthWarrior3201/Odus/releases/latest).
-It's a single file. You need Python 3.9 or newer.
+It's a single file, and you don't need to install Python.
 
-- **Windows:** download `odus.cmd`, then double-click it or run it in Command
-  Prompt.
-- **macOS / Linux:** download `odus.sh`, then run `chmod +x odus.sh` and
-  `./odus.sh`.
-- **Any system:** download `odus.py` and run `python odus.py`.
+- **Windows:** download `odus.bat`, then double-click it or run it in Command
+  Prompt. If Windows warns about a downloaded file, choose **Run** (or
+  **More info > Run anyway**).
+- **macOS:** download `odus.command`, then run `chmod +x odus.command` once in
+  Terminal. After that, double-click it, or run `./odus.command`. If macOS
+  says it can't check the developer, right-click it and choose **Open**.
+- **Linux:** download `odus.sh`, then run `chmod +x odus.sh` and `./odus.sh`.
+- **Any system with Python 3.9+:** download `odus.py` and run `python odus.py`.
+
+### No Python? No problem
+
+`odus.bat`, `odus.command` and `odus.sh` use the Python already on your
+computer if it's 3.9 or newer. If there isn't one, the first run offers to
+download a private copy just for Odus (about 11 MB on Windows, 20 MB on
+macOS/Linux). It's checked against a known fingerprint before it's used, and
+it's only used by Odus: nothing is installed system-wide and your PATH isn't
+touched. Say no and Odus shows how to install Python yourself instead.
+
+The private copy lives in `%LOCALAPPDATA%\Odus` (Windows) or
+`~/.local/share/odus` (macOS/Linux). Delete that folder to remove it.
 
 ## First run
 
@@ -28,8 +43,8 @@ The first time you run Odus it asks whether to add itself to your PATH.
   in the registry (never `setx`, which cuts PATH off at 1024 characters) and a
   backup is saved first. On macOS/Linux Odus links `~/.local/bin/odus` and adds
   a small block to your shell settings.
-- **No:** nothing changes. Run the file you downloaded (`odus.cmd` or
-  `./odus.sh`) from its folder.
+- **No:** nothing changes. Run the file you downloaded (`odus.bat`,
+  `./odus.command` or `./odus.sh`) from its folder.
 
 Change your mind any time with `odus path add` or `odus path remove`.
 
@@ -132,7 +147,7 @@ odus refresh off      stop doing it automatically (on to turn it back on)
 
 Where it works:
 
-- **Command Prompt:** always (through `odus.cmd`).
+- **Command Prompt:** always (through `odus.bat`).
 - **PowerShell:** only when PowerShell may run local scripts (Settings > System
   > For developers > PowerShell). Odus never changes that setting itself; once
   you allow scripts it adds `odus.ps1` by itself. Until then `odus` still works
@@ -152,18 +167,23 @@ Typos and synonyms are understood: `odus fsat isntall git`,
 ## Making a release
 
 1. Set `VERSION` in `odus.py`.
-2. Run `python build.py`. It writes `dist/odus.cmd` (Windows),
-   `dist/odus.sh` (macOS/Linux) and `dist/odus.py` (plain source). Each is
-   the whole program in one file.
+2. Run `python build.py`. It writes `dist/odus.bat` (Windows),
+   `dist/odus.command` (macOS), `dist/odus.sh` (Linux) and `dist/odus.py`
+   (plain source). Each is the whole program in one file.
 3. On GitHub, create a release tagged `v<VERSION>` (for example `v0.1`) and
-   upload all three files.
+   upload all four files.
+
+The private Python that the launchers can download is pinned in `build.py`
+(`PY_VERSION` and its SHA-256 fingerprints). To move to a newer Python, update
+the version and the fingerprints there.
 
 ## Download page
 
 `index.html` is a one-page site: the logo and a Download button. The button
-asks GitHub for the latest release and offers Windows (`.cmd`), macOS and
-Linux (`.sh`) and Python source (`.py`) downloads, highlighting the visitor's
-system. See More Releases lists every release so older versions can be
+asks GitHub for the latest release and offers Windows (`.bat`), macOS
+(`.command`), Linux (`.sh`) and Python source (`.py`) downloads, highlighting
+the visitor's system. Older releases that only have `.cmd`/`.sh` files still
+work. See More Releases lists every release so older versions can be
 downloaded the same way. To put it online,
 open the repo's **Settings > Pages**, choose **Deploy from a branch**, then
 **main** and **/ (root)**.

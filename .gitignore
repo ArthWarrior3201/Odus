@@ -6,5 +6,10 @@ __pycache__/
 
 # build output (uploaded to GitHub releases) and local launcher
 dist/
+/odus.bat
 /odus.cmd
 /odus.sh
+/odus.command
+
+# local tool settings
+.claude/

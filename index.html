@@ -189,22 +189,26 @@
     return a;
   }
 
-  // Fill the three download cards for one release
+  // Fill the download cards for one release. Newer releases ship odus.bat /
+  // odus.command / odus.sh; older ones had odus.cmd and odus.sh only.
   function show(release) {
-    const find = ext => (release.assets || []).find(a => a.name.toLowerCase().endsWith(ext));
-    const cmd = find(".cmd"), sh = find(".sh"), py = find(".py");
+    const find = (...exts) => {
+      for (const ext of exts) {
+        const hit = (release.assets || []).find(a => a.name.toLowerCase().endsWith(ext));
+        if (hit) return hit;
+      }
+    };
+    const win = find(".bat", ".cmd"), mac = find(".command", ".sh"), linux = find(".sh"), py = find(".py");
     options.replaceChildren();
-    if (cmd) options.append(card("windows", "Windows", cmd, "Command Prompt"));
-    if (sh) {
-      options.append(card("macos", "macOS", sh, "Terminal"));
-      options.append(card("linux", "Linux", sh, "Terminal"));
-    }
+    if (win) options.append(card("windows", "Windows", win, "Command Prompt"));
+    if (mac) options.append(card("macos", "macOS", mac, "Terminal"));
+    if (linux) options.append(card("linux", "Linux", linux, "Terminal"));
     if (py) {
       const src = card("source", "Python source", py, "Any system");
       src.classList.add("source");
       options.append(src);
     }
-    if (!cmd && !sh && !py) {
+    if (!win && !mac && !linux && !py) {
       const none = document.createElement("div");
       none.className = "none";
       none.textContent = "This release has no downloads for Windows, macOS or Linux.";

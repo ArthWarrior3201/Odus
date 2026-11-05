@@ -813,9 +813,9 @@ def summary(req: Request, results: list) -> int:
 
 
 # ================================================================== extras
-SELF = os.path.realpath(__file__)  # odus.py, or the single-file odus.cmd / odus.sh
+SELF = os.path.realpath(__file__)  # odus.py, or the single-file odus.bat / odus.sh / odus.command
 HERE = os.path.dirname(SELF)
-SINGLE_FILE = SELF.lower().endswith((".cmd", ".sh"))
+SINGLE_FILE = SELF.lower().endswith((".bat", ".cmd", ".sh", ".command"))
 CPUS = os.cpu_count() or 2
 CONFIG_DIR = (os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "Odus") if IS_WIN
               else os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "odus"))
@@ -961,7 +961,7 @@ def env_diff() -> dict:
 
 
 def write_shell_refresh(diff: dict | None = None) -> dict:
-    """Hand the changes to the launcher (odus.cmd / odus.ps1 / the shell
+    """Hand the changes to the launcher (odus.bat / odus.ps1 / the shell
     function), which applies them to the terminal you're typing in."""
     target = START_ENV.get("ODUS_REFRESH_FILE")
     diff = env_diff() if diff is None else diff
@@ -1005,10 +1005,13 @@ def describe_diff(diff: dict) -> list:
 
 # ---------------------------------------------------------------- PATH setup
 PS1_MARK = "# Odus launcher for PowerShell"
-_PS1_TARGET = '-x "$PSScriptRoot\\odus.cmd"' if SELF.lower().endswith(".cmd") else '"$PSScriptRoot\\odus.py"'
+# the single-file odus.bat finds (or fetches) Python itself, so PowerShell just runs it
+_PS1_RUN = (f'& "$PSScriptRoot\\{os.path.basename(SELF)}" @args' if SELF.lower().endswith((".bat", ".cmd")) else
+            'if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 "$PSScriptRoot\\odus.py" @args } '
+            'else { & python "$PSScriptRoot\\odus.py" @args }')
 PS1 = PS1_MARK + r""" (written by Odus; turns on Live Refresh)
 $env:ODUS_REFRESH_FILE = Join-Path $env:TEMP ("odus-refresh-" + [guid]::NewGuid().ToString("N") + ".ps1")
-if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 TARGET @args } else { & python TARGET @args }""".replace("TARGET", _PS1_TARGET) + r"""
+""" + _PS1_RUN + r"""
 $odusRc = $LASTEXITCODE
 if (Test-Path -LiteralPath $env:ODUS_REFRESH_FILE) { . $env:ODUS_REFRESH_FILE; Remove-Item -LiteralPath $env:ODUS_REFRESH_FILE -Force }
 Remove-Item Env:ODUS_REFRESH_FILE -ErrorAction SilentlyContinue
@@ -1048,7 +1051,7 @@ def _ps_scripts_allowed() -> bool:
 
 def sync_ps1():
     """Keep odus.ps1 only while PowerShell is allowed to run it; otherwise it
-    would block the working odus.cmd in PowerShell."""
+    would block the working odus.bat in PowerShell."""
     if not IS_WIN:
         return
     path = os.path.join(HERE, "odus.ps1")
@@ -1125,7 +1128,7 @@ def on_path() -> bool:
     return os.path.islink(link) and _key(os.path.realpath(link)) == _key(SELF)
 
 
-# When run from the source (odus.py) on Windows, 'odus' needs a small odus.cmd next to it.
+# When run from the source (odus.py) on Windows, 'odus' needs a small odus.bat next to it.
 SOURCE_CMD = """@echo off
 rem Odus launcher (written by Odus for running from source). No setlocal, so Live Refresh can update this window.
 set "ODUS_REFRESH_FILE=%TEMP%\\odus-refresh-%RANDOM%%RANDOM%.cmd"
@@ -1150,20 +1153,20 @@ def path_add() -> bool:
         return True
     try:
         if IS_WIN:
-            if not SINGLE_FILE and not os.path.exists(os.path.join(HERE, "odus.cmd")):
-                with open(os.path.join(HERE, "odus.cmd"), "w", encoding="ascii", newline="\r\n") as f:
+            if not SINGLE_FILE and not any(os.path.exists(os.path.join(HERE, n)) for n in ("odus.bat", "odus.cmd")):
+                with open(os.path.join(HERE, "odus.bat"), "w", encoding="ascii", newline="\r\n") as f:
                     f.write(SOURCE_CMD)
             raw, _ = _win_user_path_raw()
             backup = _win_set_user_path((raw.rstrip(";") + ";" if raw else "") + HERE)
             os.environ["PATH"] = os.environ.get("PATH", "").rstrip(";") + ";" + HERE
             sync_ps1()
             say(c(f"Added {HERE} to your PATH.", "32") + c(f" (old PATH saved in {backup})", "2"))
-            say("Type 'odus' from any folder. This terminal picks it up right away when you use odus.cmd;")
+            say("Type 'odus' from any folder. This Command Prompt window picks it up right away;")
             say("other open terminals need reopening once.")
             return True
         bindir = os.path.expanduser("~/.local/bin")
         os.makedirs(bindir, exist_ok=True)
-        launcher = SELF  # odus.sh, or odus.py (it has its own #! line)
+        launcher = SELF  # odus.sh / odus.command, or odus.py (it has its own #! line)
         os.chmod(launcher, os.stat(launcher).st_mode | 0o111)
         link = os.path.join(bindir, "odus")
         if os.path.lexists(link):
@@ -1885,6 +1888,21 @@ def classify_link(link: str):
     return "media", link, None
 
 
+def ssl_context():
+    """HTTPS settings that also work with the private Python odus.sh / odus.command download:
+    it has its own OpenSSL, which may not know where this system keeps its
+    trusted certificates, so point it at them."""
+    import ssl
+    ctx = ssl.create_default_context()
+    if not IS_WIN and not ctx.get_ca_certs():
+        for bundle in ("/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt",
+                       "/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/ca-bundle.pem", "/etc/pki/tls/cacert.pem"):
+            if os.path.isfile(bundle):
+                ctx.load_verify_locations(cafile=bundle)
+                break
+    return ctx
+
+
 def http_download(url: str, dest: str, req: Request) -> tuple:
     t = time.time()
     tag = url.split("/")[-1][:40] or url
@@ -1892,7 +1910,8 @@ def http_download(url: str, dest: str, req: Request) -> tuple:
     if req.dry_run:
         return url, OK, 0.0
     try:
-        r = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": f"Odus/{VERSION}"}), timeout=30)
+        r = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": f"Odus/{VERSION}"}),
+                                   timeout=30, context=ssl_context())
     except urllib.error.HTTPError as e:
         say(c(f"[{tag}] {e.code} {e.reason}", "31"))
         return url, NOT_FOUND if e.code == 404 else FAILED, time.time() - t
@@ -2103,9 +2122,21 @@ def _main(req: Request) -> int:
     return {OK: 0, CANCELLED: 1, NOT_FOUND: 3, AMBIGUOUS: 4, SKIPPED: 0}.get(rc, 1)
 
 
+def _quiet_exit(code: int):
+    """Exit without a 'Broken pipe' message when the output was cut short (e.g. odus ... | head)."""
+    try:
+        sys.stdout.flush()
+    except OSError:
+        try:
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        except OSError:
+            pass
+    sys.exit(code)
+
+
 if __name__ == "__main__":
     try:
-        sys.exit(main())
+        _quiet_exit(main())
     except KeyboardInterrupt:
         say(c("\nStopped.", "33"))
-        sys.exit(130)
+        _quiet_exit(130)
